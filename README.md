@@ -1,2 +1,32 @@
-# File_Encoder_v2.0
-My second iteration of a file encoding software completely revamped
+# File Encoder v2.0
+This project was made to develop my skills in file handling and manipulation. It takes an input from a file and encodes the characters based on a randomized unicode cipher and allows for the downloading of both the encoded and decoded formats.
+
+## Major Changes Between Versions
+
+This encoding script follows after its predacessor but was made completely from stratched and every mechanism completely revamped.
+1. Allows for more file types (.txt, .csv, .json, .html, .xlsx, .xls, .xlsm, .xlsb)
+2. Encodes not just letters and numbers, but thousands of different characters
+3. Cipher isn't pre-made but randomly generated every time the program is ran
+4. Complete UI overhaul to look much nicer
+
+## How It's Made
+
+Packages Used: Python, zlib, base64, os, pandas, PIL Image, customtkinter
+
+Firstly, the program begins by having the user open a file, allowing for only specific extensions. Once the file is read, the user has the option to encode or decode depending on what type of data is being read, and once that has run then they have the option to download the file.
+
+The program works by first generating a randomized key utilizing the first 2048 unicode characters and compressing it, allowing for much more variety of text, which will later be used to encode and decode the data. The encoding process begins by first storing the file extension, the length of the compressed key, and the compressed key itself for future access. Next it goes through every character in the string of data to convert it to its unicode number, and matching it with the generated key. The last step of the encoding process is to encode it once again but into a hexidecimal format so the final encoded data is one single format and completely unrecognizable. The decoding process is the exact same just reversed; convert hexidecimal into normal text, retrieve the key that was used and generate a cipher, then match the encoded numbers to the cipher.
+
+Every other function in the stript is for the UI such as the button to open files will show the right name with the correct extension icon, etc.
+
+## Lessons Learned
+
+I learned how to manipulate more than just .txt files but also various other text-related file formats as well as Excel. Additionally, I learned about conversions of characters and things such as bytes or unicode characters, and how to convert from one form to another. Lastly I learned more UI building techniques using customtkinter.
+
+## Future Updates
+
+Add more file formats, allow for options to switch length of unicode key if the user knows what kinds of characters are already present, add a progress bar for when the program takes a bit longer to run (i.e. having to match every character with all 1114111 unicode characters in cipher)
+
+## How to Use
+
+Simply run the script
