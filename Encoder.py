@@ -129,7 +129,6 @@ appearanceTitle = ct.CTkLabel(optionFrame,text="Set Appearance",pady=15,font=nor
 
 openFrame = ct.CTkFrame(programFrame,fg_color="transparent")
 openName = ct.CTkLabel(openFrame,text=" Open File to Begin",font=normal)
-#openImage = ct.CTkLabel(openFrame)
 
 selectFrame = ct.CTkFrame(programFrame,fg_color="transparent")
 selection = ct.CTkSegmentedButton(selectFrame,values=["     Encode     ","     Decode     "],border_width=0,font=normal)
@@ -286,7 +285,6 @@ optionFrame.grid(row=0,column=0,sticky="nsew")
 
 #============== Place Right Frame (Program) ==============
 
-#openImage.pack(side="left",fill="both")
 openName.pack(side="left")
 openFrame.pack(pady=10)
 
