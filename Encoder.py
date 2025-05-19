@@ -3,99 +3,15 @@ import os, pandas
 from PIL import Image
 import customtkinter as ct
 
-#============== Create Processing Functions ===============
-
-def compress(int_list):
-    #Compresses list of integers into a single string
-    bitstream = 0
-    for num in int_list:
-        bitstream = (bitstream << 12) | num
-
-    byte_len = (len(int_list) * 12 + 7) // 8
-    packed_bytes = bitstream.to_bytes(byte_len, byteorder='big')
-
-    compressed = zlib.compress(packed_bytes)
-    encoded = base64.b64encode(compressed).decode('utf-8')
-    return encoded
-
-def decompress(encoded):
-    #Decompresses string into list of integers
-    compressed = base64.b64decode(encoded.encode('utf-8'))
-    packed_bytes = zlib.decompress(compressed)
-
-    bitstream = int.from_bytes(packed_bytes, byteorder='big')
-
-    num_ints = 2048
-    int_list = []
-    for _ in range(num_ints):
-        int_list.append((bitstream >> (12 * (num_ints - 1))) & 0xFFF)
-        bitstream <<= 12
-    return int_list
-
-array = [] #This will be the future encoding key
-nums = random.sample(range(2048),2048) #Randomized key
-compressedNums = compress(nums)
-
-for i in range(2048):
-  array.append([str(i).zfill(4),str(nums[i]).zfill(4)]) #Populates key with unicode number and matching randomized number
-
-#Encodes by matching each character to a randomized character and storing that key
-def encode(string):
-    new = ""
-    new += fileType.zfill(10) + str(len(compressedNums)).zfill(8) + compressedNums #Store the key
-    for char in string:
-        num = ord(char)
-        n = str(num).zfill(4)
-        for i in array: #Match unicode character to key list
-            if n in i:
-                if i[0] == n:
-                    new += i[1]
-    new = encodeHex(new) #Extra layer of encription to encode the key into hexidecimal
-    return new
-
-#Decodes by matching each randomized character to its normal counterpart
-def decode(string = ""):
-    new = ""
-    string = decodeHex(string) #First decode the hexidecimal encoding
-    keyLength = int(string[10:18]) #Retrieve length of the compressed randomized list
-    oldNums = decompress(string[18:(keyLength+18)]) #Decompress randomized list
-    key = []
-    for i in range(2048): #Generate key based on decompressed list
-        key.append([str(i).zfill(4),str(oldNums[i]).zfill(4)])
- 
-    data = string[(keyLength+18):] #Retrieve the actual data to convert
-    
-    #Convert unicode characters back into normal script
-    for i in range(0,len(data),4):
-        code = data[i:i+4]
-        for k in key:
-            if code in k:
-                if k[1] == code:
-                    new += chr(int(k[0]))
-    return new
-
-#Converts string into hexidecimal by each character
-def encodeHex(string):
-    new = ""
-    for char in string:
-        new += format(ord(char),"x").zfill(3)
-    return new
-
-#Converts hexidecimal back into a string
-def decodeHex(string):
-    new = ""
-    for i in range(0,len(string),3):
-        chunk = string[i:i+3]
-        new += chr(int(chunk,16))
-    return new
-
-#============== Create Window/Widgets ===============
+#==========================================================
+#============== Create Window/Widgets =====================
+#==========================================================
 
 ct.set_appearance_mode("system")
 
 root = ct.CTk()
 root.title("Encode")
-root.geometry("620x500")
+root.geometry("650x530")
 root.columnconfigure(0, weight= 1)
 root.columnconfigure(1, weight= 3) #Window with 1x2 grid
 root.rowconfigure(0, weight = 1)
@@ -120,35 +36,200 @@ json = ct.CTkImage(light_image=Image.open(os.path.join(path,"json.png")),dark_im
 html = ct.CTkImage(light_image=Image.open(os.path.join(path,"html.png")),dark_image=Image.open(os.path.join(path,"html.png")),size=(25,25))
 xls = ct.CTkImage(light_image=Image.open(os.path.join(path,"xls.png")),dark_image=Image.open(os.path.join(path,"xls.png")),size=(25,25))
 
+blankIm = ct.CTkImage(light_image=Image.new(mode="RGB",size=(0,0)),dark_image=Image.new(mode="RGB",size=(0,0)),size=(0,0))
+
 #--Left Frame--
 
-optionTitle = ct.CTkLabel(optionFrame,text="Options",pady=25,font=bold)
-appearanceTitle = ct.CTkLabel(optionFrame,text="Set Appearance",pady=15,font=normalBold)
+optionTitle = ct.CTkLabel(optionFrame,text="Options",font=bold)
+modeTitle = ct.CTkLabel(optionFrame,text="Detected Cipher Range*",font=normal)
+modeSelection = ct.CTkLabel(optionFrame,text="None",font=normal,fg_color=("#3b8ed0","#1f6aa5"),text_color="white",corner_radius=8,width=100)
+spaceL = ct.CTkLabel(optionFrame,text="")
+appearanceTitle = ct.CTkLabel(optionFrame,text="Set Appearance",font=normalBold)
 
 #--Right Frame--
 
-openFrame = ct.CTkFrame(programFrame,fg_color="transparent")
-openName = ct.CTkLabel(openFrame,text=" Open File to Begin",font=normal)
+spaceR = ct.CTkLabel(programFrame,text="")
+openName = ct.CTkLabel(programFrame,text="Open File to Begin",font=normal,image=blankIm,compound="center")
 
 selectFrame = ct.CTkFrame(programFrame,fg_color="transparent")
+detection = ct.CTkLabel(selectFrame,text="",text_color="green")
 selection = ct.CTkSegmentedButton(selectFrame,values=["     Encode     ","     Decode     "],border_width=0,font=normal)
 selection.set("     Encode     ")
 
 textPreview = ct.CTkTextbox(programFrame,state="disabled",font=boxFont)
 errorLabel = ct.CTkLabel(programFrame,text="",text_color="red")
-attributionLabel = ct.CTkLabel(programFrame,text="Icons made by Smashicons from www.flaticon.com",font=attFont,text_color="#474747")
+attributionLabel = ct.CTkLabel(programFrame,text="Icons made by Smashicons from www.flaticon.com",font=attFont,text_color=("#c5c5c5","#474747"))
 
-#============== Create Button Functions ===============
+progressFrame = ct.CTkFrame(programFrame,fg_color="transparent")
+
+#progressBar = ct.CTkProgressBar(programFrame,orientation="horizontal",width=370,progress_color=("#939ba2","#4a4d50"))
+
+#==========================================================
+#============== Create Processing Functions ===============
+#==========================================================
+
+def compress(int_list,bar = ct.CTkProgressBar):
+    #Compresses list of integers into a single string
+    array = []
+    progress = 0
+    for i in int_list:
+        array.append(int(i))
+        bar.set(progress / len(int_list))
+        progress += 1
+    int_list=array
+
+    bitstream = 0
+    progress = 0
+    for num in int_list:
+        bitstream = (bitstream << 12) | num
+        bar.set(progress / len(int_list))
+        progress += 1
+
+    byte_len = (len(int_list) * 12 + 7) // 8
+    packed_bytes = bitstream.to_bytes(byte_len, byteorder='big')
+
+    compressed = zlib.compress(packed_bytes)
+    encoded = base64.b64encode(compressed).decode('utf-8')
+    return encoded
+
+def decompress(encoded,length,bar = ct.CTkProgressBar):
+    #Decompresses string into list of integers
+    compressed = base64.b64decode(encoded.encode('utf-8'))
+    packed_bytes = zlib.decompress(compressed)
+
+    bitstream = int.from_bytes(packed_bytes, byteorder='big')
+
+    num_ints = int(length)
+    int_list = []
+    progress = 0
+    for _ in num_ints:
+        int_list.append((bitstream >> (12 * (num_ints - 1))) & 0xFFF)
+        bitstream <<= 12
+        bar.set(progress / num_ints)
+        progress += 1
+    
+    progress = 0
+    final = []
+    for i in int_list:
+        final.append(str(i).zfill(len(length.strip("0"))))
+        bar.set(progress / len(int_list))
+        progress += 1
+    return final
+
+dicKey = dict() #This will be the future encoding key
+nums = [] #Randomized key
+compressedNums = ""
+ciLen = 0
+
+def makeKey(string,bar = ct.CTkProgressBar): #Reads file to determine how large the cipher needs to be based on unicode characters
+    n = 0
+    progress = 0
+    for i in string: #Finds max unicode character
+        x = ord(i)
+        if x > n:
+            n = x
+        bar.set(progress / len(string))
+        progress += 1
+    
+    pad = len(str(n))
+    global nums, dicKey, compressedNums,ciLen
+    ciLen = n
+    modeSelection.configure(text=str(n))
+
+    progress = 0
+    array = random.sample(range(n),n)
+    for i in array:
+        nums.append(str(i).zfill(pad)) #Creates a randomized, padded list of integers to based on max unicode number
+        bar.set(progress / len(array))
+        progress += 1
+    
+    bar2 = ct.CTkProgressBar(progressFrame,width=370,progress_color="green")
+    bar2.set(0)
+    bar2.pack()
+    compressedNums = compress(nums,bar2)
+    bar2.destroy()
+
+    dicKey = dict(zip(range(1,n+1),nums)) #Creates a dictionary to match characters
+
+#Encodes by matching each character to a randomized character and storing that key
+def encode(string,bar = ct.CTkProgressBar):
+    new = ""
+    new += fileType.zfill(10) + str(ciLen).zfill(7) + str(len(compressedNums)).zfill(8) + compressedNums #Store the key
+    progress = 0
+    for char in string:
+        num = ord(char)
+        new += dicKey[num]
+        bar.set(progress / len(string))
+        progress += 1
+    new = encodeHex(new) #Extra layer of encription to encode the key into hexidecimal
+    return new
+
+#Decodes by matching each randomized character to its normal counterpart
+def decode(string = "",bar = ct.CTkProgressBar):
+    new = ""
+    string = decodeHex(string) #First decode the hexidecimal encoding
+    ci = string[10:17]
+    keyLength = int(string[17:25]) #Retrieve length of the compressed randomized list
+    bar2 = ct.CTkProgressBar(progressFrame,width=370,progress_color="green")
+    bar2.set(0)
+    bar2.pack()
+    oldNums = decompress(string[25:(keyLength+25)],ci,bar2) #Decompress randomized list
+    bar2.destroy()
+
+    key = dict(zip(oldNums,range(1,int(ci)+1))) #Generate key based on old list
+    data = string[(keyLength+25):] #Retrieve the actual data to convert
+    
+    #Convert unicode characters back into normal script
+    pad = len(ci.strip("0"))
+    progress = 0
+    for i in range(0,len(data),pad):
+        code = data[i:i+pad]
+        new += chr(key[code])
+        bar.set(progress / len(data))
+        progress += 1
+    return new
+
+#Converts string into hexidecimal by each character
+def encodeHex(string):
+    new = ""
+    for char in string:
+        new += format(ord(char),"x").zfill(3)
+    return new
+
+#Converts hexidecimal back into a string
+def decodeHex(string):
+    new = ""
+    for i in range(0,len(string),3):
+        chunk = string[i:i+3]
+        new += chr(int(chunk,16))
+    return new
+
+#==========================================================
+#============== Create Button Functions ===================
+#==========================================================
 
 fileName = ""
 fileType = ""
 data = ""
+
+def modeSelect(input = ""): #Automatically selects encoding or decoding button based on file format
+    if (input[:10].find(".") != -1) and (input[10:25].isdigit):
+        selection.set("     Decode     ")
+        modeSelection.configure(text="Decoding ({})".format(ciLen))
+        detection.configure(text="File to Decode Found")
+    else:
+        selection.set("     Encode     ")
+        detection.configure(text="File to Encode Found")
 
 def openFile():
     errorLabel.configure(text="") #Clears errors/preview box
     textPreview.configure(state="normal")
     textPreview.delete("1.0",ct.END)
     textPreview.configure(state="disabled")
+
+    bar = ct.CTkProgressBar(progressFrame,width=370,progress_color="green")
+    bar.set(0)
+    bar.pack()
 
     try:
         types = [("Text Files",".txt"),("CSV Files",".csv"),("JSON Files",".json"), #Accepted file formats
@@ -177,34 +258,46 @@ def openFile():
                     openName.configure(image=html,compound="left")
             with open(filePath,mode="r") as file:
                 data = file.read()
+                makeKey(data,bar)
+                modeSelect(data)
         elif fileType in excelExtentions:
             openName.configure(image=xls,compound="left")
             data = str(pandas.read_excel(filePath))
+            makeKey(data,bar)
+            modeSelect(data)
         else:
-            openName.configure(image="",text="Open File to Begin")
+            openName.configure(image=blankIm,compound="center",text="Open File to Begin") #Reset
+            modeSelection.configure(text="None")
             errorLabel.configure(text="File Type Not Supported")
+            detection.configure(text="")
     except AttributeError:
-        openName.configure(image="",text="Open File to Begin")
+        openName.configure(image=blankIm,compound="center",text="Open File to Begin") #Reset
+        modeSelection.configure(text="None")
         errorLabel.configure(text="File Not Opened")
+        detection.configure(text="")
+    bar.destroy()
     
-
 def process(data):
     errorLabel.configure(text="")
+    bar = ct.CTkProgressBar(progressFrame,width=370,progress_color="green")
+    bar.set(0)
+    bar.pack()
     try:
         if data != "":
             textPreview.configure(state="normal") #Clears preview box
             textPreview.delete("1.0",ct.END)
             text = ""
             if selection.get() == "     Encode     ":
-                text = encode(data) #Previews encoded data
+                text = encode(data,bar) #Previews encoded data
             else:
-                text = decode(data) #Previews decoded data
+                text = decode(data,bar) #Previews decoded data
             textPreview.insert("1.0",text)
             textPreview.configure(state="disabled")
         else:
             errorLabel.configure(text="No Data Read. Please Try Again.")
     except ValueError:
         errorLabel.configure(text="Invalid Decoding Values. Please Try Different File.")
+    bar.destroy()
 
 def download(input):
     errorLabel.configure(text="")
@@ -215,7 +308,6 @@ def download(input):
                 file = ct.filedialog.asksaveasfile(defaultextension=".txt",title="Select Folder to Download",filetypes=[("Text Files",".txt")])
                 file.write(text)
             else:
-                input = decodeHex(input)
                 filetype = input[:10].lstrip("0") #If file was decoded, download decoded data in original format
                 readExtentions = [".txt",".csv",".json",".html"]
                 excelExtentions = [".xls",".xlsx",".xlsm",".xlsb"]
@@ -244,50 +336,77 @@ def close():
 
 def about(): #Creates a new window that gives basic information
     aboutWindow = ct.CTk()
-    aboutWindow.geometry("430x200")
+    aboutWindow.geometry("500x450")
     aboutWindow.title("About Me")
 
     line1 = "Steps to use encoding program:"
-    line2 = "1) Open the file to process using the 'Open File' button"
-    line3 = "2) Select whether to encode or decode"
-    line4 = "3) Press 'Run'"
-    line5 = "4) Download the new data by pressing 'Download'"
+    line2 = "1) Open the file to process using the 'Open File' button \n" \
+            "2) Encoding or decoding will automatically be detected \n" \
+            "    but can still be manually changed \n" \
+            "3) Press 'Run' \n" \
+            "4) Download the new data by pressing 'Download'"
+    line3 = "*Cipher Range Information:"
+    line4 = "The number tells the program how long the key list \n" \
+            "should be, with the length representing the max \n" \
+            "unicode character found within the file"
+    line5 = "0-127: US ASCII (Standard Alphabet and Symbols) \n" \
+            "128-2047: Most Latinic Alphabets (Arabic, Greek, etc.) \n" \
+            "2018-65535: Additional Languages (Chinese, Japanese, etc.)** \n" \
+            "65536-1114111: Other (More Asian Characters, Emojis, etc.)** \n" \
+            "\n" \
+            "**!!WARNING!! Numbers in higher ranges cause the program \n" \
+            "    to slow down or even crash"
 
     label1 = ct.CTkLabel(aboutWindow,text=line1,font=normalBold)
-    label2 = ct.CTkLabel(aboutWindow,text=line2,font=normal)
-    label3 = ct.CTkLabel(aboutWindow,text=line3,font=normal)
-    label4 = ct.CTkLabel(aboutWindow,text=line4,font=normal)
-    label5 = ct.CTkLabel(aboutWindow,text=line5,font=normal)
+    label2 = ct.CTkLabel(aboutWindow,text=line2,font=normal,justify="left")
+    label3 = ct.CTkLabel(aboutWindow,text=line3,font=normalBold)
+    label4 = ct.CTkLabel(aboutWindow,text=line4,font=normal,justify="left")
+    label5 = ct.CTkLabel(aboutWindow,text=line5,font=normal,justify="left")
     
+    space = ct.CTkLabel(aboutWindow,text="")
+
     label1.pack(anchor="w",padx=15,pady=5)
     label2.pack(anchor="w",padx=15)
-    label3.pack(anchor="w",padx=15)
+    space.pack()
+    label3.pack(anchor="w",padx=15,pady=8)
     label4.pack(anchor="w",padx=15)
-    label5.pack(anchor="w",padx=15)
+    label5.pack(anchor="w",padx=15,pady=5)
 
     aboutWindow.mainloop()
 
-#============== Place Left Frame (Options) ===============
+#==========================================================
+#============== Place Left Frame (Options) ================
+#==========================================================
 
-optionTitle.pack()
+optionTitle.pack(pady=25)
 openButton = ct.CTkButton(optionFrame,text="Open File",command=openFile,font=normal)
 openButton.pack()
-appearanceTitle.pack()
+
+modeTitle.pack(pady=10)
+modeSelection.pack()
+
+spaceL.pack(pady=15)
+
+appearanceTitle.pack(pady=15)
 appearanceSelect = ct.CTkOptionMenu(optionFrame, values=["Dark Mode","Light Mode"],command=changeAppearance,font=normal)
 appearanceSelect.pack()
 
-exitButton = ct.CTkButton(optionFrame,text="Exit",command=close,fg_color="#616161",hover_color="#424242",font=normal)
+exitButton = ct.CTkButton(optionFrame,text="Exit",command=close,fg_color=("#909090","#616161"),hover_color=("#616161","#424242"),font=normal)
 exitButton.pack(side="bottom",pady=20)
+
 helpButton = ct.CTkButton(optionFrame,text="Help",command=about,font=normal)
 helpButton.pack(side="bottom")
 
 optionFrame.grid(row=0,column=0,sticky="nsew")
 
-#============== Place Right Frame (Program) ==============
+#==========================================================
+#============== Place Right Frame (Program) ===============
+#==========================================================
 
-openName.pack(side="left")
-openFrame.pack(pady=10)
+spaceR.pack()
+openName.pack()
 
+detection.pack(anchor="w")
 selection.pack(side="left")
 button = ct.CTkButton(selectFrame, text="Run", command=lambda:process(data),width=80,font=normal)
 button.pack(side="right")
@@ -297,12 +416,12 @@ textPreview.pack(anchor="w",padx=15,fill="x")
 downloadButton = ct.CTkButton(programFrame, text="Download", command=lambda:download(data),font=normal)
 downloadButton.pack(pady=10)
 
-errorLabel.pack(anchor="nw",padx=15)
+progressFrame.pack()
+
+errorLabel.pack(anchor="nw",padx=15,pady=10)
 
 attributionLabel.pack(anchor="w",side="bottom",pady=1,padx=10)
 
 programFrame.grid(row=0,column=1,sticky="nsew",padx=20,pady=20)
 
 root.mainloop()
-
-
