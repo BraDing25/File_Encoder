@@ -1,4 +1,4 @@
-# File Encoder v2.0
+# File Encoder
 This project was made to develop my skills in file handling and manipulation. It takes an input from a file and encodes the characters based on a randomized unicode cipher and allows for the downloading of both the encoded and decoded formats.
 
 ## Major Changes Between Versions
