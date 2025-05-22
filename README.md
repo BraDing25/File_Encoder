@@ -23,8 +23,13 @@ Every other function in the stript is for the UI such as the button to open file
 
 I learned how to manipulate more than just .txt files but also various other text-related file formats as well as Excel. Additionally, I learned about conversions of characters and things such as bytes or unicode characters, and how to convert from one form to another. Lastly I learned more UI building techniques using customtkinter.
 
-## v.1.1
-File Encoder v1.1 Features Include: 
+## Changelog:
+v1.2:
+-Changed dictionaries to only use the unique unicode characters present rather than every unicode character within a range to save on space
+-Added information displays to show the length of the key and max unicode character found
+-Updated help menu accordingly
+
+v1.1: 
 -Reordered sections 
 -Removed unneccesary code 
 -Changed key from looped arrays to dictionaries 
