@@ -25,19 +25,19 @@ I learned how to manipulate more than just .txt files but also various other tex
 
 ## Changelog:
 v1.2:
--Changed dictionaries to only use the unique unicode characters present rather than every unicode character within a range to save on space
--Added information displays to show the length of the key and max unicode character found
--Updated help menu accordingly
+- Changed dictionaries to only use the unique unicode characters present rather than every unicode character within a range to save on space
+- Added information displays to show the length of the key and max unicode character found
+- Updated help menu accordingly
 
 v1.1: 
--Reordered sections 
--Removed unneccesary code 
--Changed key from looped arrays to dictionaries 
--Changed UI code to be more consistant 
--Added automatic encode/decode detection 
--Added automatic max unicode detection (used to generate key length and save space)* 
--Added progress bar 
--Updated help menu accordingly
+- Reordered sections 
+- Removed unneccesary code 
+- Changed key from looped arrays to dictionaries 
+- Changed UI code to be more consistant 
+- Added automatic encode/decode detection 
+- Added automatic max unicode detection (used to generate key length and save space)* 
+- Added progress bar 
+- Updated help menu accordingly
 
 *This new unicode detection changes the key from default being a length of 2048 (unicode characters that include majority of written text) to a system that automatically finds the largest unicode character in the text, and makes a key of that length, since the program will never have to worry about a character being larger than that, drasitcally reducing the size of the key
 
