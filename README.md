@@ -43,7 +43,7 @@ v1.1:
 
 ## Future Updates
 
-Add more file formats, allow for options to switch length of unicode key if the user knows what kinds of characters are already present, add a progress bar for when the program takes a bit longer to run (i.e. having to match every character with all 1114111 unicode characters in cipher), store key outside of file so there is an actual layer of security since right now there is none
+Add more file formats, store key outside of file so there is an actual layer of security since right now there is none
 
 ## How to Use
 
